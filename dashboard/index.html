@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusPulse - Dashboard</title>
+  <link rel="icon" type="image/png" href="assets/icons/icon.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { background-color: #0f172a; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body class="min-h-screen text-gray-100 font-sans">
+
+  <!-- Pantalla de Login -->
+  <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center px-4">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold tracking-tight mb-2">FocusPulse</h1>
+      <p class="text-slate-400 text-lg">Rastreo inteligente de productividad</p>
+      <p class="text-slate-500 text-sm mt-2">Inicia sesión para ver tu actividad en tiempo real.</p>
+    </div>
+    <div id="google-btn" class="flex justify-center"></div>
+  </div>
+
+  <!-- Dashboard (oculto hasta login) -->
+  <div id="dashboard-screen" class="hidden fade-in">
+
+    <!-- Header -->
+    <header class="border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+        <img src="assets/icons/logo_horizontal.png" alt="FocusPulse" class="h-8 w-auto" />
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm text-slate-400">
+          <span id="status-indicator" class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="status-text">En vivo</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <img id="user-photo" src="" alt="Foto" class="w-8 h-8 rounded-full" />
+          <span id="user-email" class="text-sm text-slate-300 hidden md:inline"></span>
+          <button id="btn-logout" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-300 transition">
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <!-- Gráfico de dona -->
+      <section class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+        <h2 class="text-lg font-semibold mb-4">Distribución de Tiempo</h2>
+        <div class="relative w-full max-w-xs mx-auto">
+          <canvas id="doughnut-chart"></canvas>
+        </div>
+        <p id="chart-empty" class="text-center text-slate-500 mt-4 hidden">Sin datos disponibles aún.</p>
+      </section>
+
+      <!-- Panel lateral -->
+      <div class="flex flex-col gap-8">
+
+        <!-- Resumen rápido -->
+        <section class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+          <h2 class="text-lg font-semibold mb-4">Resumen</h2>
+          <ul id="stats-list" class="space-y-3 text-sm text-slate-300">
+            <li class="text-slate-500">Cargando datos...</li>
+          </ul>
+        </section>
+
+        <!-- Consejo de IA -->
+        <section class="bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-700/50 rounded-2xl p-6 shadow-lg">
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <h2 class="text-lg font-semibold text-indigo-200">Consejo de IA del Día</h2>
+          </div>
+          <p id="ai-tip" class="text-slate-300 text-sm leading-relaxed">
+            Generando consejo personalizado...
+          </p>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Sección de Insignias -->
+    <section class="max-w-5xl mx-auto px-6 pb-10">
+      <h2 class="text-xl font-semibold mb-6">Insignias Desbloqueadas</h2>
+      <div id="badges-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      </div>
+    </section>
+
+    <!-- Metas y Límites Diarios -->
+    <section class="max-w-5xl mx-auto px-6 pb-10">
+      <div class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+        <h2 class="text-lg font-semibold mb-6">Metas y Límites Diarios</h2>
+
+        <!-- Meta de Productividad -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🎯</span>
+              <span class="text-sm font-medium text-emerald-300">Meta de Productividad</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="goal-prod-minus" class="w-7 h-7 rounded-md bg-slate-600 hover:bg-slate-500 text-white text-sm font-bold flex items-center justify-center transition cursor-pointer select-none">−</button>
+              <span id="goal-prod-value" class="text-sm text-slate-300 w-14 text-center font-medium">4h</span>
+              <button id="goal-prod-plus" class="w-7 h-7 rounded-md bg-slate-600 hover:bg-slate-500 text-white text-sm font-bold flex items-center justify-center transition cursor-pointer select-none">+</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+              <div id="bar-productive" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div>
+            </div>
+            <span id="bar-prod-label" class="text-xs text-slate-400 w-16 text-right">0%</span>
+          </div>
+          <p id="prod-detail" class="text-xs text-slate-500 mt-1"></p>
+        </div>
+
+        <!-- Límite de Distracciones -->
+        <div id="distraction-container">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⚠️</span>
+              <span class="text-sm font-medium text-red-300">Límite de Distracciones</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="goal-dist-minus" class="w-7 h-7 rounded-md bg-slate-600 hover:bg-slate-500 text-white text-sm font-bold flex items-center justify-center transition cursor-pointer select-none">−</button>
+              <span id="goal-dist-value" class="text-sm text-slate-300 w-14 text-center font-medium">1h</span>
+              <button id="goal-dist-plus" class="w-7 h-7 rounded-md bg-slate-600 hover:bg-slate-500 text-white text-sm font-bold flex items-center justify-center transition cursor-pointer select-none">+</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
+              <div id="bar-distraction" class="h-full bg-red-500 rounded-full transition-all duration-500" style="width:0%"></div>
+            </div>
+            <span id="bar-dist-label" class="text-xs text-slate-400 w-16 text-right">0%</span>
+          </div>
+          <p id="dist-detail" class="text-xs text-slate-500 mt-1"></p>
+          <div id="dist-alert" class="hidden mt-3 flex items-center gap-2 text-red-400 text-sm font-medium animate-pulse">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <span>¡Límite alcanzado! Considera tomar un descanso de redes.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabla de Sitios Web -->
+    <section class="max-w-5xl mx-auto px-6 pb-10">
+      <div class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-semibold">Detalle por Sitio Web</h2>
+          <select id="sort-select" class="bg-slate-700 text-slate-300 text-sm rounded-lg px-3 py-1.5 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="desc">Mayor a menor duración</option>
+            <option value="asc">Menor a mayor duración</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-400">
+                <th class="pb-3 font-medium">Sitio Web</th>
+                <th class="pb-3 font-medium text-right">Tiempo de Uso</th>
+              </tr>
+            </thead>
+            <tbody id="sites-table-body" class="text-slate-300">
+              <tr><td colspan="2" class="py-4 text-center text-slate-500">Cargando datos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-6 text-center">
+      <p class="text-sm text-slate-500">© 2026 Franco Leone. Todos los derechos reservados.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

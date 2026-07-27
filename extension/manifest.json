@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "FocusPulse",
+  "version": "1.0.0",
+  "description": "Rastrea el tiempo que pasas en cada sitio web para mejorar tu productividad.",
+  "permissions": ["tabs", "storage", "idle", "identity", "notifications"],
+  "oauth2": {
+    "client_id": "789113271385-4kugac59m2atnaimqr2cf6vk00n946jk.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "FocusPulse",
+    "default_icon": {
+      "16": "assets/icons/icon.png",
+      "48": "assets/icons/icon.png",
+      "128": "assets/icons/icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "assets/icons/icon.png",
+    "48": "assets/icons/icon.png",
+    "128": "assets/icons/icon.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/icons/*", "blocked.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

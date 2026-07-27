@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>FocusPulse - Modo Enfoque</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 16px;
+      color: #94a3b8;
+      margin-bottom: 32px;
+      max-width: 400px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #334155;
+      color: #f87171;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🎯</div>
+    <h1>¡Vuelve al trabajo!</h1>
+    <p>El Modo Enfoque está activo. Este sitio está bloqueado para ayudarte a mantener la concentración.</p>
+    <button class="btn" id="btn-disable">Desactivar Modo Enfoque</button>
+  </div>
+
+  <script>
+    document.getElementById("btn-disable").addEventListener("click", async () => {
+      await chrome.storage.local.set({ modo_enfoque: false, focus_end_time: 0 });
+      // Notificar al background
+      chrome.runtime.sendMessage({ action: "disable_focus_mode" });
+      // Volver a la página anterior o cerrar
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    });
+  </script>
+</body>
+</html>
